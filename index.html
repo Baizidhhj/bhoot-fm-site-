@@ -753,7 +753,8 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                
+                setLogLevel('debug'); // Enable debug logging
+
                 // Define collection paths
                 seasonsCollectionPath = `artifacts/${appId}/public/data/seasons`;
                 episodesCollectionPath = `artifacts/${appId}/public/data/episodes`;
@@ -814,6 +815,7 @@
 
             } catch (error) {
                 console.error("Initialization error:", error);
+                // This is the error you are seeing
                 showModal(`Fatal Error: ${error.message}`);
                 updateHeader("Error", "App Failed to Load", error.message);
             }
