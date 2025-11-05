@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BHOOT FM - The Horror Archive</title>
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Load Google Fonts: 'Inter' for UI, 'Creepster' for the horror title -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- 3. Custom Styles -->
+    <style>
+        /* Use Inter as the default font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-creepster { font-family: 'Creepster', cursive; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #18181b; }
+        ::-webkit-scrollbar-thumb { background: #52525b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #71717a; }
+        /* Custom styles for range inputs (seek bar, volume) */
+        input[type='range'] { -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
+        input[type='range']::-webkit-slider-runnable-track { background: #3f3f46; height: 4px; border-radius: 2px; }
+        input[type='range']::-moz-range-track { background: #3f3f46; height: 4px; border-radius: 2px; }
+        input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; margin-top: -4px; background-color: #f4f4f5; height: 12px; width: 12px; border-radius: 50%; }
+        input[type='range']:hover::-webkit-slider-thumb { background-color: #dc2626; }
+        input[type='range']::-moz-range-thumb { background-color: #f4f4f5; height: 12px; width: 12px; border-radius: 50%; border: none; }
+        input[type='range']:hover::-moz-range-thumb { background-color: #dc2626; }
+        /* Track item hover effects */
+        .track-item:hover .track-number { display: none; }
+        .track-item .track-play-icon { display: none; }
+        .track-item:hover .track-play-icon { display: block; }
+        .track-item.playing .track-title,
+        .track-item.playing .track-number { color: #dc2626; }
+        .subcategory-card { transition: background-color 0.2s; }
+        .subcategory-card:hover { background-color: #27272a; }
+
+        /* Styles for Admin Panel */
+        .admin-input {
+            background-color: #27272a; /* zinc-800 */
+            border: 1px solid #3f3f46; /* zinc-700 */
+            color: #f4f4f5; /* zinc-100 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.5rem 0.75rem; /* py-2 px-3 */
+            width: 100%;
+        }
+        .admin-input:focus {
+            outline: none;
+            border-color: #dc2626; /* red-600 */
+            box-shadow: 0 0 0 1px #dc2626;
+        }
+        .admin-select {
+            background-color: #27272a;
+            border: 1px solid #3f3f46;
+            color: #f4f4f5;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            width: 100%;
+        }
+        .admin-button {
+            background-color: #dc2626; /* red-600 */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .admin-button:hover {
+            background-color: #b91c1c; /* red-700 */
+        }
+        .delete-button {
+            background-color: #3f3f46; /* zinc-700 */
+            color: #f4f4f5;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem; /* text-xs */
+            transition: background-color 0.2s;
+        }
+        .delete-button:hover {
+            background-color: #b91c1c; /* red-700 */
+        }
+    </style>
+</head>
+
+<body class="bg-black text-zinc-100 h-screen flex flex-col overflow-hidden">
+
+    <!-- 
+      VIEW 1: THE PLAYER (Default)
+    -->
+    <div id="player-view" class="h-screen flex flex-col">
+        <!-- Wrapper for Sidebar and Main Content -->
+        <div class="flex-1 flex overflow-hidden">
+
+            <!-- Sidebar -->
+            <aside class="w-48 md:w-64 bg-black flex-shrink-0 p-4 overflow-y-auto">
+                <div class="text-3xl font-creepster text-red-600 mb-6">
+                    BHOOT FM
+                </div>
+                <nav>
+                    <h3 class="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">Archive</h3>
+                    <ul id="sidebar-list" class="space-y-1">
+                        <!-- Main Category links will be dynamically inserted here -->
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-y-auto">
+                <!-- Dynamic Header Section -->
+                <div id="main-header" class="p-6 md:p-10 bg-gradient-to-b from-zinc-900 to-zinc-950 flex items-end space-x-6">
+                    <div class="w-32 h-32 md:w-48 md:h-48 bg-zinc-800 rounded-md shadow-lg flex-shrink-0 flex items-center justify-center">
+                        <svg class="w-20 h-20 md:w-28 md:h-28 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><use href="#ghost-icon"></use></svg>
+                    </div>
+                    <div>
+                        <p id="header-type" class="text-sm text-zinc-300 font-medium">The Complete Archive</p>
+                        <h1 id="header-title" class="text-4xl md:text-7xl lg:text-8xl font-creepster text-red-600 tracking-wider">
+                            BHOOT FM
+                        </h1>
+                        <p id="header-description" class="text-zinc-400 mt-2 text-sm md:text-base">
+                            All episodes from the legendary horror show.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Dynamic Content Area: Shows Subcategories or Episodes -->
+                <div class="p-6 md:p-10">
+                    <div id="subcategory-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+                        <!-- Subcategory cards will be inserted here -->
+                    </div>
+                    <div id="episode-list-container" class="hidden">
+                        <!-- Header Row for the list -->
+                        <div class="flex text-zinc-400 text-sm border-b border-zinc-800 pb-2 mb-4">
+                            <div class="w-8 text-center">#</div>
+                            <div class="flex-1">Title</div>
+                            <div class="w-32 hidden md:block">Season</div>
+                            <div class="w-16 text-right">
+                                <svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                        </div>
+                        <div id="episode-list" class="space-y-1">
+                            <!-- Episodes will be dynamically inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Audio Player Bar -->
+        <footer class="h-28 md:h-24 bg-zinc-900 border-t border-zinc-800 p-4 flex-shrink-0 text-zinc-300">
+            <div class="flex items-center h-full">
+                <!-- Now Playing (Left) -->
+                <div class="w-1/3 flex items-center space-x-3">
+                    <div class="w-14 h-14 bg-zinc-800 rounded-md flex-shrink-0 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><use href="#ghost-icon"></use></svg>
+                    </div>
+                    <div>
+                        <p id="player-title" class="text-sm font-medium text-zinc-100 truncate">Select an episode</p>
+                        <p id="player-subsection" class="text-xs text-zinc-400">BHOOT FM</p>
+                    </div>
+                </div>
+
+                <!-- Player Controls (Center) -->
+                <div class="w-1/3 flex-1 flex flex-col items-center justify-center px-4">
+                    <div class="flex items-center space-x-4 mb-2">
+                        <button id="prev-btn" class="text-zinc-400 hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8.445 14.832A1 1 0 0010 14.03V5.969a1 1 0 00-1.555-.832L4.12 9.168a1 1 0 000 1.664l4.325 4.0z"></path><path d="M13.445 14.832A1 1 0 0015 14.03V5.969a1 1 0 00-1.555-.832L9.12 9.168a1 1 0 000 1.664l4.325 4.0z"></path></svg></button>
+                        <button id="play-pause-btn" class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
+                            <svg id="play-icon" class="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.002v3.996a1 1 0 001.555.832l3.198-1.998a1 1 0 000-1.664l-3.198-1.998z" clip-rule="evenodd"></path></svg>
+                            <svg id="pause-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1H8zm5 0a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1h-1z" clip-rule="evenodd"></path></svg>
+                        </button>
+                        <button id="next-btn" class="text-zinc-400 hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M11.555 5.168A1 1 0 0010 5.969v8.062a1 1 0 001.555.832l4.325-4.03a1 1 0 000-1.664l-4.325-4.0z"></path><path d="M6.555 5.168A1 1 0 005 5.969v8.062a1 1 0 001.555.832l4.325-4.03a1 1 0 000-1.664l-4.325-4.0z"></path></svg></button>
+                    </div>
+                    <div class="w-full flex items-center space-x-2">
+                        <span id="current-time" class="text-xs text-zinc-400 w-8 text-right">0:00</span>
+                        <input id="seek-bar" type="range" value="0" max="100" class="w-full h-1">
+                        <span id="total-duration" class="text-xs text-zinc-400 w-8 text-left">0:00</span>
+                    </div>
+                </div>
+
+                <!-- Volume (Right) -->
+                <div class="w-1/3 flex items-center justify-end space-x-2 pr-4">
+                    <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 11c.902 0 1.77.342 2.414.986a3.5 3.5 0 010 4.95M10 12l-4 4m0 0l-4-4m4 4V4m0 8s-4-4-4-4"></path></svg>
+                    <input id="volume-bar" type="range" min="0" max="1" step="0.01" value="1" class="w-24 h-1">
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 
+      VIEW 2: THE ADMIN PANEL (Hidden by default)
+    -->
+    <div id="admin-view" class="hidden h-screen overflow-y-auto p-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-4xl font-creepster text-red-600">Admin Panel</h1>
+                <button id="logout-btn" class="text-zinc-400 hover:text-white transition-colors">Exit Admin</button>
+            </div>
+
+            <!-- Manage Seasons -->
+            <div class="bg-zinc-900 p-6 rounded-lg mb-8">
+                <h2 class="text-xl font-semibold mb-4">Manage Seasons</h2>
+                
+                <!-- Add Season Form -->
+                <form id="add-season-form" class="flex space-x-4 mb-4">
+                    <input type="text" id="season-name-input" placeholder="New season name (e.g., Bhoot Fm 2010)" class="admin-input flex-1" required>
+                    <button type="submit" class="admin-button">Add Season</button>
+                </form>
+
+                <!-- Seasons List -->
+                <div class="space-y-2">
+                    <h3 class="text-sm text-zinc-400">Existing Seasons:</h3>
+                    <ul id="admin-seasons-list" class="space-y-2">
+                        <!-- Seasons will be listed here -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Manage Episodes -->
+            <div class="bg-zinc-900 p-6 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4">Manage Episodes</h2>
+
+                <!-- Add Episode Form -->
+                <form id="add-episode-form" class="space-y-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="episode-season-select" class="block text-sm font-medium text-zinc-300 mb-1">Season</label>
+                            <select id="episode-season-select" class="admin-select" required>
+                                <option value="">Select a season...</option>
+                                <!-- Season options populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="episode-subseason-input" class="block text-sm font-medium text-zinc-300 mb-1">Sub-Season (e.g., August)</label>
+                            <input type="text" id="episode-subseason-input" placeholder="Optional" class="admin-input">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="episode-title-input" class="block text-sm font-medium text-zinc-300 mb-1">Episode Title</label>
+                        <input type="text" id="episode-title-input" placeholder="e.g., The Haunted House" class="admin-input" required>
+                    </div>
+                    <div>
+                        <label for="episode-url-input" class="block text-sm font-medium text-zinc-300 mb-1">Audio URL</label>
+                        <input type="url" id="episode-url-input" placeholder="https://.../episode.m4a" class="admin-input" required>
+                    </div>
+                    <div>
+                        <label for="episode-duration-input" class="block text-sm font-medium text-zinc-300 mb-1">Duration</label>
+                        <input type="text" id="episode-duration-input" placeholder="e.g., 42:15" class="admin-input" required>
+                    </div>
+                    <button type="submit" class="admin-button">Add Episode</button>
+                </form>
+
+                <!-- Episodes List -->
+                <div class="space-y-2">
+                    <h3 class="text-sm text-zinc-400">Existing Episodes:</h3>
+                    <ul id="admin-episodes-list" class="space-y-2 max-h-96 overflow-y-auto">
+                        <!-- Episodes will be listed here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG Definitions (for icon reuse) -->
+    <svg width="0" height="0" class="absolute">
+        <symbol id="ghost-icon" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1v1.5a6.75 6.75 0 0 1 6.75 6.75v1.5h1.5A2.75 2.75 0 0 1 23 13.5v3.082a3.75 3.75 0 0 1-2.091 3.391L13 23.092a3.75 3.75 0 0 1-2 0l-7.909-3.119A3.75 3.75 0 0 1 1 16.582V13.5A2.75 2.75 0 0 1 3.75 10.75h1.5v-1.5A6.75 6.75 0 0 1 12 1.001Z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.25 12c.333-.333.5-.667.5-1s-.167-.667-.5-1M8.75 12c.333-.333-.5-.667-.5-1s.167-.667.5-1"></path>
+        </symbol>
+    </svg>
+
+    <!-- 
+      JavaScript Section 
+    -->
+    <script type="module">
+        // --- 1. FIREBASE IMPORTS ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, setLogLevel
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- (NEW) DEPLOYMENT CONFIG ---
+        // YOUR FIREBASE CONFIG OBJECT IS PASTED HERE
+        const DEPLOY_FIREBASE_CONFIG = {
+           apiKey: "AIzaSyDIpgpGzInk38t-eiPOTURXkCDgwm8",
+           authDomain: "bhoot-fm-archive.firebaseapp.com",
+           projectId: "bhoot-fm-archive",
+           storageBucket: "bhoot-fm-archive.appspot.com",
+           messagingSenderId: "45892521541",
+           appId: "1:45892521541:web:af38c41a6f1df4743fe6ac"
+        };
+        
+        // YOUR APP ID (from your Firestore path)
+        const DEPLOY_APP_ID = "bhoot-fm-archive"; // Use the one from your path: artifacts/{appId}/...
+        // ---------------------------------
+
+        // --- 2. GLOBAL STATE & DATA ---
+        let allSeasons = [];
+        let allEpisodes = [];
+        let groupedData = new Map();
+        
+        const audioPlayer = new Audio();
+        let currentEpisodeIndex = -1;
+        let isPlaying = false;
+        let currentPlaylist = []; // Holds the episodes for the *current view*
+
+        // Firebase Globals
+        let db, auth;
+        // Use deployment config if __app_id is not present
+        const appId = typeof __app_id !== 'undefined' ? __app_id : DEPLOY_APP_ID;
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : DEPLOY_FIREBASE_CONFIG;
+        
+        // --- NEW FIRESTORE PATHS ---
+        let seasonsCollectionPath;
+        let episodesCollectionPath;
+
+        // --- 3. DOM ELEMENT REFERENCES ---
+        // Player View
+        const playerView = document.getElementById('player-view');
+        const sidebarListEl = document.getElementById('sidebar-list');
+        const headerType = document.getElementById('header-type');
+        const headerTitle = document.getElementById('header-title');
+        const headerDescription = document.getElementById('header-description');
+        const subcategoryGridEl = document.getElementById('subcategory-grid');
+        const episodeListContainerEl = document.getElementById('episode-list-container');
+        const episodeListEl = document.getElementById('episode-list');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const seekBar = document.getElementById('seek-bar');
+        const currentTimeEl = document.getElementById('current-time');
+        const totalDurationEl = document.getElementById('total-duration');
+        const volumeBar = document.getElementById('volume-bar');
+        const playerTitle = document.getElementById('player-title');
+        const playerSubsection = document.getElementById('player-subsection');
+
+        // Admin View
+        const adminView = document.getElementById('admin-view');
+        const logoutBtn = document.getElementById('logout-btn');
+        const addSeasonForm = document.getElementById('add-season-form');
+        const seasonNameInput = document.getElementById('season-name-input');
+        const adminSeasonsList = document.getElementById('admin-seasons-list');
+        const addEpisodeForm = document.getElementById('add-episode-form');
+        const episodeSeasonSelect = document.getElementById('episode-season-select');
+        const episodeSubseasonInput = document.getElementById('episode-subseason-input');
+        const episodeTitleInput = document.getElementById('episode-title-input');
+        const episodeUrlInput = document.getElementById('episode-url-input');
+        const episodeDurationInput = document.getElementById('episode-duration-input');
+        const adminEpisodesList = document.getElementById('admin-episodes-list');
+
+        // --- 4. DATA PROCESSING FUNCTIONS ---
+
+        /**
+         * Processes episodes into a nested map: Map<SeasonName, Map<SubSeasonName, Episodes[]>>
+         */
+        function processData() {
+            groupedData = new Map();
+            
+            // Ensure all seasons (even empty ones) are in the map
+            allSeasons.forEach(season => {
+                groupedData.set(season.name, new Map());
+            });
+
+            allEpisodes.forEach(ep => {
+                const mainCat = ep.season;
+                const subCat = ep.sub_season || 'Episodes'; // Default sub-season if blank
+
+                if (!groupedData.has(mainCat)) {
+                    // This case should be rare if seasons are managed properly
+                    groupedData.set(mainCat, new Map());
+                }
+                
+                const subCatMap = groupedData.get(mainCat);
+                if (!subCatMap.has(subCat)) {
+                    subCatMap.set(subCat, []);
+                }
+                
+                subCatMap.get(subCat).push(ep);
+            });
+
+            // Sort episodes within each sub-season map
+            for (const subCatMap of groupedData.values()) {
+                for (const episodeArray of subCatMap.values()) {
+                    episodeArray.sort((a, b) => a.title.localeCompare(b.title));
+                }
+            }
+        }
+
+        // --- 5. PLAYER UI FUNCTIONS ---
+
+        function renderSidebar() {
+            sidebarListEl.innerHTML = ''; // Clear existing list
+            
+            // Sort seasons alphabetically
+            const sortedSeasons = [...allSeasons].sort((a, b) => a.name.localeCompare(b.name));
+            
+            sortedSeasons.forEach(season => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <a href="#" class="sidebar-item block text-zinc-300 hover:text-white font-medium p-2 rounded-md" data-category="${season.name}">
+                        ${season.name}
+                    </a>
+                `;
+                sidebarListEl.appendChild(li);
+            });
+
+            // Add click listeners
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const category = item.getAttribute('data-category');
+                    renderMainContent(category);
+                    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('bg-zinc-800', 'text-white'));
+                    item.classList.add('bg-zinc-800', 'text-white');
+                });
+            });
+        }
+
+        function renderMainContent(mainCategory) {
+            const subCategoriesMap = groupedData.get(mainCategory);
+            
+            // Handle case where season exists but has no episodes
+            if (!subCategoriesMap || subCategoriesMap.size === 0) {
+                subcategoryGridEl.innerHTML = `<p class="text-zinc-400 col-span-full">No episodes found for this season.</p>`;
+                subcategoryGridEl.classList.remove('hidden');
+                episodeListContainerEl.classList.add('hidden');
+                updateHeader(mainCategory, 'Season', '0 episodes');
+                return;
+            }
+
+            const subCategoryNames = Array.from(subCategoriesMap.keys());
+
+            // Case 1: Only one subcategory (e.g., "Episodes"). Show list directly.
+            if (subCategoryNames.length === 1) {
+                renderEpisodeList(mainCategory, subCategoryNames[0]);
+            } 
+            // Case 2: Multiple subcategories (e.g., "August", "September"). Show cards.
+            else {
+                subcategoryGridEl.innerHTML = '';
+                
+                // Sort sub-categories
+                subCategoryNames.sort(); 
+                
+                subCategoryNames.forEach(subCatName => {
+                    const card = document.createElement('div');
+                    card.className = 'subcategory-card bg-zinc-900 p-4 rounded-md shadow-lg cursor-pointer';
+                    card.setAttribute('data-season', mainCategory);
+                    card.setAttribute('data-subseason', subCatName);
+                    card.innerHTML = `
+                        <div class="w-full h-32 bg-zinc-800 rounded-md flex items-center justify-center mb-3">
+                            <svg class="w-16 h-16 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><use href="#ghost-icon"></use></svg>
+                        </div>
+                        <p class="text-white font-semibold truncate">${subCatName}</p>
+                        <p class="text-sm text-zinc-400">${mainCategory}</p>
+                    `;
+                    card.addEventListener('click', () => {
+                        renderEpisodeList(mainCategory, subCatName);
+                    });
+                    subcategoryGridEl.appendChild(card);
+                });
+
+                subcategoryGridEl.classList.remove('hidden');
+                episodeListContainerEl.classList.add('hidden');
+                updateHeader(mainCategory, 'Season', `${subCategoryNames.length} sub-seasons`);
+            }
+        }
+
+        function renderEpisodeList(seasonName, subSeasonName) {
+            const episodes = groupedData.get(seasonName)?.get(subSeasonName) || [];
+            currentPlaylist = episodes; // Set the current playlist
+            
+            episodeListEl.innerHTML = ''; // Clear list
+            
+            episodes.forEach((episode, index) => {
+                const isPlaying = (currentEpisodeIndex === episode.id);
+                
+                const episodeHtml = `
+                    <div class="track-item flex items-center p-2 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer ${isPlaying ? 'playing' : ''}" data-episode-id="${episode.id}" data-playlist-index="${index}">
+                        <div class="w-8 text-center text-zinc-400">
+                            <span class="track-number text-sm">${index + 1}</span>
+                            <span class="track-play-icon text-white">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.002v3.996a1 1 0 001.555.832l3.198-1.998a1 1 0 000-1.664l-3.198-1.998z" clip-rule="evenodd"></path></svg>
+                            </span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="track-title text-zinc-100 font-medium">${episode.title}</p>
+                            <p class="text-zinc-400 text-sm md:hidden">${episode.season}</p>
+                        </div>
+                        <div class="w-32 hidden md:block text-zinc-400 text-sm">${episode.season}</div>
+                        <div class="w-16 text-right text-zinc-400 text-sm">${episode.duration}</div>
+                    </div>
+                `;
+                episodeListEl.insertAdjacentHTML('beforeend', episodeHtml);
+            });
+            
+            document.querySelectorAll('.track-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const episodeId = item.getAttribute('data-episode-id');
+                    playEpisode(episodeId);
+                });
+            });
+
+            subcategoryGridEl.classList.add('hidden');
+            episodeListContainerEl.classList.remove('hidden');
+            updateHeader(subSeasonName, 'Season', `${episodes.length} episodes`);
+        }
+
+        function updateHeader(title, type, description) {
+            headerTitle.textContent = title;
+            headerType.textContent = type;
+            headerDescription.textContent = description;
+        }
+
+        // --- 6. PLAYER FUNCTIONS ---
+
+        function playEpisode(episodeId) {
+            const episode = allEpisodes.find(ep => ep.id === episodeId);
+            if (!episode) return;
+            
+            if (!episode.audioUrl || !episode.audioUrl.startsWith('http')) {
+                showModal("This episode doesn't have a valid audio link.");
+                return;
+            }
+
+            currentEpisodeIndex = episode.id;
+            audioPlayer.src = episode.audioUrl;
+            audioPlayer.play();
+            isPlaying = true;
+
+            playerTitle.textContent = episode.title;
+            playerSubsection.textContent = episode.season;
+            playIcon.classList.add('hidden');
+            pauseIcon.classList.remove('hidden');
+
+            document.querySelectorAll('.track-item').forEach(item => item.classList.remove('playing'));
+            const trackItem = document.querySelector(`.track-item[data-episode-id="${episodeId}"]`);
+            if (trackItem) {
+                trackItem.classList.add('playing');
+            }
+            
+            const subSeason = episode.sub_season || 'Episodes';
+            currentPlaylist = groupedData.get(episode.season)?.get(subSeason) || [];
+        }
+
+        function togglePlayPause() {
+            if (currentEpisodeIndex === -1) {
+                if (allEpisodes.length > 0) {
+                    playEpisode(allEpisodes[0].id); // Play first song
+                }
+                return;
+            }
+            if (isPlaying) {
+                audioPlayer.pause();
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+            } else {
+                audioPlayer.play();
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+            }
+            isPlaying = !isPlaying;
+        }
+
+        function playNext() {
+            if (currentPlaylist.length === 0) return;
+            const currentPlaylistIndex = currentPlaylist.findIndex(ep => ep.id === currentEpisodeIndex);
+            let nextPlaylistIndex = currentPlaylistIndex + 1;
+            if (nextPlaylistIndex >= currentPlaylist.length) {
+                nextPlaylistIndex = 0; // Wrap around
+            }
+            playEpisode(currentPlaylist[nextPlaylistIndex].id);
+        }
+
+        function playPrev() {
+            if (currentPlaylist.length === 0) return;
+            const currentPlaylistIndex = currentPlaylist.findIndex(ep => ep.id === currentEpisodeIndex);
+            let prevPlaylistIndex = currentPlaylistIndex - 1;
+            if (prevPlaylistIndex < 0) {
+                prevPlaylistIndex = currentPlaylist.length - 1; // Wrap around
+            }
+            playEpisode(currentPlaylist[prevPlaylistIndex].id);
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // --- 7. ADMIN & AUTH FUNCTIONS ---
+
+        function showLoginPrompt() {
+            const modal = createModal();
+            
+            const messageEl = document.createElement('p');
+            messageEl.className = 'text-zinc-100 mb-4';
+            messageEl.textContent = 'Enter admin password:';
+            
+            const inputEl = document.createElement('input');
+            inputEl.type = 'password';
+            inputEl.className = 'admin-input mb-4';
+            inputEl.id = 'password-input';
+            
+            const loginButton = document.createElement('button');
+            loginButton.className = 'admin-button w-full';
+            loginButton.textContent = 'Login';
+            
+            loginButton.onclick = () => {
+                const password = inputEl.value;
+                // THIS IS YOUR ADMIN PASSWORD. Change "bhootadmin123" to your own secret.
+                if (password === "bhootadmin123") {
+                    modal.el.remove(); // Use modal.el.remove()
+                    showAdminView();
+                } else {
+                    modal.el.remove(); // Use modal.el.remove()
+                    showModal("Invalid password.");
+                }
+            };
+
+            modal.content.appendChild(messageEl);
+            modal.content.appendChild(inputEl);
+            modal.content.appendChild(loginButton);
+            document.body.appendChild(modal.el);
+            inputEl.focus();
+        }
+
+        function showAdminView() {
+            playerView.classList.add('hidden');
+            adminView.classList.remove('hidden');
+            renderAdminDashboard();
+        }
+
+        function showPlayerView() {
+            adminView.classList.add('hidden');
+            playerView.classList.remove('hidden');
+        }
+
+        async function renderAdminDashboard() {
+            // Render Seasons
+            adminSeasonsList.innerHTML = allSeasons.map(season => `
+                <li class="flex justify-between items-center bg-zinc-800 p-2 rounded">
+                    <span>${season.name}</span>
+                    <button class="delete-button" data-id="${season.id}" data-collection="seasons">Delete</button>
+                </li>
+            `).join('');
+
+            // Populate season dropdown
+            episodeSeasonSelect.innerHTML = '<option value="">Select a season...</option>' + 
+                allSeasons.map(season => `<option value="${season.name}">${season.name}</option>`).join('');
+
+            // Render Episodes
+            adminEpisodesList.innerHTML = allEpisodes.map(ep => `
+                <li class="flex justify-between items-center bg-zinc-800 p-2 rounded">
+                    <div>
+                        <p class="font-medium">${ep.title}</p>
+                        <p class="text-xs text-zinc-400">${ep.season} / ${ep.sub_season || 'N/A'}</p>
+                    </div>
+                    <button class="delete-button" data-id="${ep.id}" data-collection="episodes">Delete</button>
+                </li>
+            `).join('');
+            
+            // Add delete listeners
+            document.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const id = button.getAttribute('data-id');
+                    const collection = button.getAttribute('data-collection');
+                    
+                    // Do not use confirm()
+                    showModal("Are you sure you want to delete this?", true, async () => {
+                        try {
+                            const path = (collection === 'seasons') ? seasonsCollectionPath : episodesCollectionPath;
+                            await deleteDoc(doc(db, path, id));
+                            // onSnapshot will handle the UI update automatically
+                        } catch (error) {
+                            console.error("Error deleting document: ", error);
+                            showModal(`Error: ${error.message}`);
+                        }
+                    });
+                });
+            });
+        }
+
+        // --- 8. MODAL & UTILITY FUNCTIONS ---
+
+        function createModal() {
+            let modal = document.getElementById('custom-modal');
+            if (modal) modal.remove();
+
+            modal = document.createElement('div');
+            modal.id = 'custom-modal';
+            modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4';
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'bg-zinc-800 p-6 rounded-lg shadow-xl max-w-sm w-full';
+            
+            const closeButton = document.createElement('button');
+            closeButton.className = 'w-full bg-red-600 text-white px-4 py-2 rounded-md font-medium hover:bg-red-700 transition-colors';
+            closeButton.textContent = 'OK';
+            closeButton.onclick = () => modal.remove();
+            
+            modal.appendChild(modalContent);
+            return { el: modal, content: modalContent, closeBtn: closeButton };
+        }
+
+        function showModal(message, showConfirm = false, onConfirm = null) {
+            const modal = createModal();
+            const messageEl = document.createElement('p');
+            messageEl.className = 'text-zinc-100 mb-4';
+            messageEl.textContent = message;
+            
+            modal.content.appendChild(messageEl);
+            
+            if (showConfirm) {
+                const confirmButton = document.createElement('button');
+                confirmButton.className = 'admin-button w-full mb-2';
+                confirmButton.textContent = 'Confirm Delete';
+                confirmButton.onclick = () => {
+                    if (onConfirm) onConfirm();
+                    modal.el.remove();
+                };
+                
+                const cancelButton = document.createElement('button');
+                cancelButton.className = 'w-full bg-zinc-600 text-white px-4 py-2 rounded-md font-medium hover:bg-zinc-700 transition-colors';
+                cancelButton.textContent = 'Cancel';
+                cancelButton.onclick = () => modal.el.remove();
+                
+                modal.content.appendChild(confirmButton);
+                modal.content.appendChild(cancelButton);
+            } else {
+                modal.content.appendChild(modal.closeBtn);
+            }
+            
+            document.body.appendChild(modal.el);
+        }
+
+        // --- 9. FIREBASE & INITIALIZATION ---
+
+        async function startApp() {
+            if (!firebaseConfig.apiKey) {
+                // Updated check
+                showModal("Error: Firebase is not configured. Please paste your config object into the DEPLOY_FIREBASE_CONFIG variable in the HTML file.");
+                return;
+            }
+
+            try {
+                // Initialize Firebase
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Define collection paths
+                seasonsCollectionPath = `artifacts/${appId}/public/data/seasons`;
+                episodesCollectionPath = `artifacts/${appId}/public/data/episodes`;
+
+                // Sign in
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                // --- SETUP REAL-TIME LISTENERS ---
+                
+                // Listener 1: Seasons
+                onSnapshot(collection(db, seasonsCollectionPath), (snapshot) => {
+                    allSeasons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    processData(); // Re-process data
+                    renderSidebar(); // Re-render sidebar
+                    
+                    // If admin view is open, update it
+                    if (!adminView.classList.contains('hidden')) {
+                        renderAdminDashboard();
+                    }
+                }, (error) => {
+                    console.error("Error listening to seasons: ", error);
+                    showModal(`Error fetching seasons: ${error.message}. Please check your Firestore rules and collection path.`);
+                });
+                
+                // Listener 2: Episodes
+                onSnapshot(collection(db, episodesCollectionPath), (snapshot) => {
+                    allEpisodes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    processData(); // Re-process data
+                    
+                    // Re-render main content if a category is selected
+                    const selectedSeason = document.querySelector('.sidebar-item.bg-zinc-800');
+                    if (selectedSeason) {
+                        renderMainContent(selectedSeason.getAttribute('data-category'));
+                    } else if (allSeasons.length > 0) {
+                        // Default view: Show the first category's content
+                        const firstSeasonName = [...allSeasons].sort((a,b) => a.name.localeCompare(b.name))[0].name;
+                        renderMainContent(firstSeasonName);
+                        const firstSidebarItem = document.querySelector('.sidebar-item');
+                        if (firstSidebarItem) {
+                            firstSidebarItem.classList.add('bg-zinc-800', 'text-white');
+                        }
+                    } else {
+                        updateHeader("BHOOT FM", "Archive is Empty", "Please add a season in the admin panel.");
+                    }
+                    
+                    // If admin view is open, update it
+                    if (!adminView.classList.contains('hidden')) {
+                        renderAdminDashboard();
+                    }
+                }, (error) => {
+                    console.error("Error listening to episodes: ", error);
+                    showModal(`Error fetching episodes: ${error.message}.`);
+                });
+
+            } catch (error) {
+                console.error("Initialization error:", error);
+                showModal(`Fatal Error: ${error.message}`);
+                updateHeader("Error", "App Failed to Load", error.message);
+            }
+        }
+
+        // --- 10. EVENT LISTENERS ---
+
+        // Player Buttons
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        nextBtn.addEventListener('click', playNext);
+        prevBtn.addEventListener('click', playPrev);
+
+        // Audio Player Events
+        audioPlayer.addEventListener('timeupdate', () => {
+            if (isNaN(audioPlayer.duration)) return;
+            seekBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+        });
+        audioPlayer.addEventListener('loadedmetadata', () => {
+            totalDurationEl.textContent = formatTime(audioPlayer.duration);
+        });
+        audioPlayer.addEventListener('ended', playNext);
+
+        // Seek & Volume
+        seekBar.addEventListener('input', () => {
+            if (isNaN(audioPlayer.duration)) return;
+            audioPlayer.currentTime = (seekBar.value / 100) * audioPlayer.duration;
+        });
+        volumeBar.addEventListener('input', () => { audioPlayer.volume = volumeBar.value; });
+        
+        // Admin & Auth
+        logoutBtn.addEventListener('click', showPlayerView);
+        
+        // NEW: Add keyboard shortcut for admin login (Cmd+L or Ctrl+L)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'l' && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault(); // Stop browser from focusing address bar
+                showLoginPrompt();
+            }
+        });
+        
+        // Admin Forms
+        addSeasonForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newName = seasonNameInput.value.trim();
+            if (!newName) return;
+            
+            try {
+                await addDoc(collection(db, seasonsCollectionPath), { name: newName });
+                seasonNameInput.value = '';
+            } catch (error) {
+                console.error("Error adding season: ", error);
+                showModal(`Error: ${error.message}`);
+            }
+        });
+        
+        addEpisodeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newEpisode = {
+                season: episodeSeasonSelect.value,
+                sub_season: episodeSubseasonInput.value.trim() || '',
+                title: episodeTitleInput.value.trim(),
+                audioUrl: episodeUrlInput.value.trim(),
+                duration: episodeDurationInput.value.trim()
+            };
+            
+            if (!newEpisode.season || !newEpisode.title || !newEpisode.audioUrl || !newEpisode.duration) {
+                showModal("Please fill out all required episode fields.");
+                return;
+            }
+            
+            try {
+                await addDoc(collection(db, episodesCollectionPath), newEpisode);
+                addEpisodeForm.reset();
+            } catch (error) {
+                console.error("Error adding episode: ", error);
+                showModal(`Error: ${error.message}`);
+            }
+        });
+
+        // Start the app
+        document.addEventListener('DOMContentLoaded', startApp);
+
+    </script>
+</body>
+</html>
