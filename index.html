@@ -96,10 +96,21 @@
         <!-- Wrapper for Sidebar and Main Content -->
         <div class="flex-1 flex overflow-hidden">
 
-            <!-- Sidebar -->
-            <aside class="w-48 md:w-64 bg-black flex-shrink-0 p-4 overflow-y-auto">
-                <div class="text-3xl font-creepster text-red-600 mb-6">
-                    BHOOT FM
+            <!-- 
+              Sidebar 
+              - Hidden on mobile (by -translate-x-full)
+              - Becomes a 'fixed' overlay when shown on mobile
+              - Becomes 'relative' and visible on desktop (md:)
+            -->
+            <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-black p-4 overflow-y-auto transform -translate-x-full md:translate-x-0 md:relative md:w-64 flex-shrink-0 transition-transform duration-300 ease-in-out">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="text-3xl font-creepster text-red-600">
+                        BHOOT FM
+                    </div>
+                    <!-- Close button (mobile only) -->
+                    <button id="sidebar-close-btn" class="text-zinc-400 hover:text-white md:hidden">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><use href="#icon-x"></use></svg>
+                    </button>
                 </div>
                 <nav>
                     <h3 class="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">Archive</h3>
@@ -111,14 +122,24 @@
 
             <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto">
-                <!-- Dynamic Header Section -->
-                <div id="main-header" class="p-6 md:p-10 bg-gradient-to-b from-zinc-900 to-zinc-950 flex items-end space-x-6">
+                <!-- Hamburger Menu (mobile only) -->
+                <button id="hamburger-btn" class="md:hidden fixed top-4 left-4 z-30 p-2 bg-zinc-900 rounded-md text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><use href="#icon-menu"></use></svg>
+                </button>
+
+                <!-- 
+                  Dynamic Header Section
+                  - Stacks vertically on mobile (flex-col)
+                  - Horizontal on desktop (md:flex-row)
+                -->
+                <div id="main-header" class="p-6 md:p-10 bg-gradient-to-b from-zinc-900 to-zinc-950 flex flex-col md:flex-row items-center md:items-end space-y-4 md:space-y-0 md:space-x-6 pt-20 md:pt-10">
                     <div class="w-32 h-32 md:w-48 md:h-48 bg-zinc-800 rounded-md shadow-lg flex-shrink-0 flex items-center justify-center">
                         <svg class="w-20 h-20 md:w-28 md:h-28 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><use href="#ghost-icon"></use></svg>
                     </div>
-                    <div>
+                    <div class="text-center md:text-left">
                         <p id="header-type" class="text-sm text-zinc-300 font-medium">The Complete Archive</p>
-                        <h1 id="header-title" class="text-4xl md:text-7xl lg:text-8xl font-creepster text-red-600 tracking-wider">
+                        <!-- Responsive font size -->
+                        <h1 id="header-title" class="text-5xl md:text-7xl lg:text-8xl font-creepster text-red-600 tracking-wider">
                             BHOOT FM
                         </h1>
                         <p id="header-description" class="text-zinc-400 mt-2 text-sm md:text-base">
@@ -150,22 +171,26 @@
             </main>
         </div>
 
-        <!-- Audio Player Bar -->
-        <footer class="h-28 md:h-24 bg-zinc-900 border-t border-zinc-800 p-4 flex-shrink-0 text-zinc-300">
-            <div class="flex items-center h-full">
-                <!-- Now Playing (Left) -->
-                <div class="w-1/3 flex items-center space-x-3">
+        <!-- 
+          Audio Player Bar
+          - Taller on mobile (h-32) and stacks (flex-col)
+          - Shorter on desktop (md:h-24) and horizontal (md:flex-row)
+        -->
+        <footer class="h-32 md:h-24 bg-zinc-900 border-t border-zinc-800 p-4 flex-shrink-0 text-zinc-300">
+            <div class="flex flex-col md:flex-row items-center justify-between h-full">
+                <!-- Now Playing (Left) - Takes full width on mobile -->
+                <div class="w-full md:w-1/3 flex items-center space-x-3">
                     <div class="w-14 h-14 bg-zinc-800 rounded-md flex-shrink-0 flex items-center justify-center">
                         <svg class="w-8 h-8 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><use href="#ghost-icon"></use></svg>
                     </div>
-                    <div>
+                    <div class="flex-1 overflow-hidden">
                         <p id="player-title" class="text-sm font-medium text-zinc-100 truncate">Select an episode</p>
                         <p id="player-subsection" class="text-xs text-zinc-400">BHOOT FM</p>
                     </div>
                 </div>
 
-                <!-- Player Controls (Center) -->
-                <div class="w-1/3 flex-1 flex flex-col items-center justify-center px-4">
+                <!-- Player Controls (Center) - Takes full width on mobile -->
+                <div class="w-full md:w-1/3 flex-1 flex flex-col items-center justify-center px-4">
                     <div class="flex items-center space-x-4 mb-2">
                         <button id="prev-btn" class="text-zinc-400 hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8.445 14.832A1 1 0 0010 14.03V5.969a1 1 0 00-1.555-.832L4.12 9.168a1 1 0 000 1.664l4.325 4.0z"></path><path d="M13.445 14.832A1 1 0 0015 14.03V5.969a1 1 0 00-1.555-.832L9.12 9.168a1 1 0 000 1.664l4.325 4.0z"></path></svg></button>
                         <button id="play-pause-btn" class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
@@ -181,8 +206,8 @@
                     </div>
                 </div>
 
-                <!-- Volume (Right) -->
-                <div class="w-1/3 flex items-center justify-end space-x-2 pr-4">
+                <!-- Volume (Right) - Hidden on mobile, visible on desktop -->
+                <div class="hidden md:flex w-1/3 items-center justify-end space-x-2 pr-4">
                     <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 11c.902 0 1.77.342 2.414.986a3.5 3.5 0 010 4.95M10 12l-4 4m0 0l-4-4m4 4V4m0 8s-4-4-4-4"></path></svg>
                     <input id="volume-bar" type="range" min="0" max="1" step="0.01" value="1" class="w-24 h-1">
                 </div>
@@ -192,22 +217,23 @@
 
     <!-- 
       VIEW 2: THE ADMIN PANEL (Hidden by default)
+      - Added responsive classes to forms
     -->
-    <div id="admin-view" class="hidden h-screen overflow-y-auto p-8">
+    <div id="admin-view" class="hidden h-screen overflow-y-auto p-4 sm:p-8">
         <div class="max-w-4xl mx-auto">
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-4xl font-creepster text-red-600">Admin Panel</h1>
+                <h1 class="text-3xl md:text-4xl font-creepster text-red-600">Admin Panel</h1>
                 <button id="logout-btn" class="text-zinc-400 hover:text-white transition-colors">Exit Admin</button>
             </div>
 
             <!-- Manage Seasons -->
-            <div class="bg-zinc-900 p-6 rounded-lg mb-8">
+            <div class="bg-zinc-900 p-4 sm:p-6 rounded-lg mb-8">
                 <h2 class="text-xl font-semibold mb-4">Manage Seasons</h2>
                 
-                <!-- Add Season Form -->
-                <form id="add-season-form" class="flex space-x-4 mb-4">
-                    <input type="text" id="season-name-input" placeholder="New season name (e.g., Bhoot Fm 2010)" class="admin-input flex-1" required>
-                    <button type="submit" class="admin-button">Add Season</button>
+                <!-- Add Season Form - Stacks on mobile -->
+                <form id="add-season-form" class="flex flex-col sm:flex-row sm:space-x-4 sm:space-y-0 space-y-4 mb-4">
+                    <input type="text" id="season-name-input" placeholder="New season name (e.g., Bhoot Fm 2010)" class="admin-input w-full" required>
+                    <button type="submit" class="admin-button w-full sm:w-auto flex-shrink-0">Add Season</button>
                 </form>
 
                 <!-- Seasons List -->
@@ -220,10 +246,10 @@
             </div>
 
             <!-- Manage Episodes -->
-            <div class="bg-zinc-900 p-6 rounded-lg">
+            <div class="bg-zinc-900 p-4 sm:p-6 rounded-lg">
                 <h2 class="text-xl font-semibold mb-4">Manage Episodes</h2>
 
-                <!-- Add Episode Form -->
+                <!-- Add Episode Form - Already responsive with grid-cols-1 -->
                 <form id="add-episode-form" class="space-y-4 mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -250,7 +276,7 @@
                         <label for="episode-duration-input" class="block text-sm font-medium text-zinc-300 mb-1">Duration</label>
                         <input type="text" id="episode-duration-input" placeholder="e.g., 42:15" class="admin-input" required>
                     </div>
-                    <button type="submit" class="admin-button">Add Episode</button>
+                    <button type="submit" class="admin-button w-full sm:w-auto">Add Episode</button>
                 </form>
 
                 <!-- Episodes List -->
@@ -268,6 +294,14 @@
     <svg width="0" height="0" class="absolute">
         <symbol id="ghost-icon" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1v1.5a6.75 6.75 0 0 1 6.75 6.75v1.5h1.5A2.75 2.75 0 0 1 23 13.5v3.082a3.75 3.75 0 0 1-2.091 3.391L13 23.092a3.75 3.75 0 0 1-2 0l-7.909-3.119A3.75 3.75 0 0 1 1 16.582V13.5A2.75 2.75 0 0 1 3.75 10.75h1.5v-1.5A6.75 6.75 0 0 1 12 1.001Z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.25 12c.333-.333.5-.667.5-1s-.167-.667-.5-1M8.75 12c.333-.333-.5-.667-.5-1s.167-.667.5-1"></path>
+        </symbol>
+        <!-- NEW Hamburger Menu Icon -->
+        <symbol id="icon-menu" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </symbol>
+        <!-- NEW Close Icon -->
+        <symbol id="icon-x" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </symbol>
     </svg>
 
@@ -338,6 +372,11 @@
         const volumeBar = document.getElementById('volume-bar');
         const playerTitle = document.getElementById('player-title');
         const playerSubsection = document.getElementById('player-subsection');
+        
+        // NEW Mobile Nav Elements
+        const sidebar = document.getElementById('sidebar');
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
 
         // Admin View
         const adminView = document.getElementById('admin-view');
@@ -417,6 +456,8 @@
                     renderMainContent(category);
                     document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('bg-zinc-800', 'text-white'));
                     item.classList.add('bg-zinc-800', 'text-white');
+                    // NEW: Close sidebar on mobile after clicking a link
+                    sidebar.classList.add('-translate-x-full');
                 });
             });
         }
@@ -857,6 +898,14 @@
             }
         });
         
+        // NEW: Mobile Nav Listeners
+        hamburgerBtn.addEventListener('click', () => {
+            sidebar.classList.remove('-translate-x-full');
+        });
+        sidebarCloseBtn.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+        });
+
         // Admin Forms
         addSeasonForm.addEventListener('submit', async (e) => {
             e.preventDefault();
